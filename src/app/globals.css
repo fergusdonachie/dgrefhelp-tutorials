@@ -94,3 +94,72 @@ a:hover {
   margin: 10px 0 0 0;
   padding-left: 18px;
 }
+
+/* Tutorial prose styling (MDX output) */
+.tutorialProse {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.tutorialProse h1 {
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.tutorialProse .lede {
+  margin: 0 0 20px 0;
+  color: var(--muted);
+}
+
+.tutorialProse h2 {
+  margin: 26px 0 10px;
+  font-size: 1.35rem;
+}
+
+.tutorialProse h3 {
+  margin: 22px 0 8px;
+  font-size: 1.15rem;
+}
+
+.tutorialProse p {
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.tutorialProse ul,
+.tutorialProse ol {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+
+.tutorialProse li {
+  margin: 6px 0;
+}
+
+.tutorialProse code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 0.95em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+}
+
+.tutorialProse details {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(18, 27, 47, 0.55);
+}
+
+.tutorialProse summary {
+  cursor: pointer;
+}
+
+.tutorialProse summary strong {
+  color: var(--text);
+}

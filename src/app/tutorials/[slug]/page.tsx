@@ -37,7 +37,12 @@ export default async function TutorialPage({ params }: Props) {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
+    <main className="tutorialProse">
+      <h1>{doc.frontmatter.title}</h1>
+      {doc.frontmatter.description ? (
+        <p className="lede">{doc.frontmatter.description}</p>
+      ) : null}
+
       <MDXRemote
         source={doc.content}
         options={{
