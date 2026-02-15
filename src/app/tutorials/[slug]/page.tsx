@@ -50,6 +50,7 @@ export default async function TutorialPage({ params }: Props) {
             remarkPlugins: [remarkGfm],
           },
         }}
+        components={(await import("@/components/mdx")).mdxComponents}
       />
     </main>
   );

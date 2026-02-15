@@ -163,3 +163,57 @@ a:hover {
 .tutorialProse summary strong {
   color: var(--text);
 }
+
+.callout {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.callout__title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.callout--note {
+  background: rgba(18, 27, 47, 0.55);
+}
+
+.callout--ok {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.22);
+}
+
+.callout--warn {
+  background: rgba(255, 196, 0, 0.08);
+  border-color: rgba(255, 196, 0, 0.22);
+}
+
+.case {
+  margin-top: 18px;
+}
+
+.case__title {
+  margin: 18px 0 10px;
+}
+
+.stage {
+  margin: 12px 0;
+}
+
+.stage__summary {
+  list-style: none;
+}
+
+.stage__summary::-webkit-details-marker {
+  display: none;
+}
+
+.stage__summary strong {
+  display: inline-block;
+}
+
+.stage__body {
+  margin-top: 8px;
+}
