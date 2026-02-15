@@ -1,30 +1,36 @@
-type StageProps = {
+type StepProps = {
   title: string;
   open?: boolean;
   children: React.ReactNode;
 };
 
-export function Stage({ title, open, children }: StageProps) {
+export function Step({ title, open, children }: StepProps) {
   return (
-    <details className="stage" open={open}>
-      <summary className="stage__summary">
+    <details className="step" open={open}>
+      <summary className="step__summary">
         <strong>{title}</strong>
       </summary>
-      <div className="stage__body">{children}</div>
+      <div className="step__body">{children}</div>
     </details>
   );
 }
 
+// Back-compat alias (older content used <Stage>)
+export const Stage = Step;
+
 type CaseProps = {
   title: string;
+  open?: boolean;
   children: React.ReactNode;
 };
 
-export function Case({ title, children }: CaseProps) {
+export function Case({ title, open = false, children }: CaseProps) {
   return (
-    <section className="case">
-      <h3 className="case__title">{title}</h3>
-      {children}
-    </section>
+    <details className="case" open={open}>
+      <summary className="case__summary">
+        <strong>{title}</strong>
+      </summary>
+      <div className="case__body">{children}</div>
+    </details>
   );
 }

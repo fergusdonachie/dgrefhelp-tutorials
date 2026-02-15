@@ -191,29 +191,39 @@ a:hover {
 }
 
 .case {
-  margin-top: 18px;
+  margin: 16px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(18, 27, 47, 0.55);
 }
 
-.case__title {
-  margin: 18px 0 10px;
-}
-
-.stage {
-  margin: 12px 0;
-}
-
-.stage__summary {
+.case__summary {
+  cursor: pointer;
   list-style: none;
 }
 
-.stage__summary::-webkit-details-marker {
+.case__summary::-webkit-details-marker {
   display: none;
 }
 
-.stage__summary strong {
-  display: inline-block;
+.case__body {
+  margin-top: 10px;
 }
 
-.stage__body {
+.step {
+  margin: 12px 0;
+}
+
+.step__summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.step__summary::-webkit-details-marker {
+  display: none;
+}
+
+.step__body {
   margin-top: 8px;
 }
