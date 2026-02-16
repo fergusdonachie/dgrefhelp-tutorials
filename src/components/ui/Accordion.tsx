@@ -5,6 +5,11 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "re
 type AccordionProps = {
   title: React.ReactNode;
   defaultOpen?: boolean;
+  /**
+   * When closing, keep the header visually anchored by compensating scroll.
+   * Helps avoid the "page jumps" feeling when collapsing large content.
+   */
+  anchorOnClose?: boolean;
   className?: string;
   summaryClassName?: string;
   bodyClassName?: string;
@@ -14,6 +19,7 @@ type AccordionProps = {
 export function Accordion({
   title,
   defaultOpen = false,
+  anchorOnClose = true,
   className,
   summaryClassName,
   bodyClassName,
@@ -26,19 +32,31 @@ export function Accordion({
   const [open, setOpen] = useState(defaultOpen);
   const [heightPx, setHeightPx] = useState<number>(0);
 
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const bodyInnerRef = useRef<HTMLDivElement | null>(null);
 
   // Measure content height.
   const measure = () => {
     const el = bodyInnerRef.current;
     if (!el) return;
-    const h = el.scrollHeight;
-    setHeightPx(h);
+    setHeightPx(el.scrollHeight);
   };
 
-  // Measure on mount and when children change.
+  // Keep height in sync with dynamic content changes (e.g. nested accordions opening).
   useLayoutEffect(() => {
     measure();
+
+    const el = bodyInnerRef.current;
+    if (!el) return;
+
+    const ro = new ResizeObserver(() => {
+      measure();
+    });
+    ro.observe(el);
+
+    return () => {
+      ro.disconnect();
+    };
   }, [children]);
 
   // Measure on window resize.
@@ -48,15 +66,45 @@ export function Accordion({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const toggle = (next: boolean) => {
+    if (!anchorOnClose || next) {
+      setOpen(next);
+      return;
+    }
+
+    // Anchor the button position in the viewport while collapsing.
+    const btn = buttonRef.current;
+    if (!btn) {
+      setOpen(false);
+      return;
+    }
+
+    const beforeTop = btn.getBoundingClientRect().top;
+    const beforeScrollY = window.scrollY;
+
+    setOpen(false);
+
+    requestAnimationFrame(() => {
+      const afterTop = btn.getBoundingClientRect().top;
+      const delta = afterTop - beforeTop;
+      if (Math.abs(delta) > 1) {
+        window.scrollTo({ top: beforeScrollY + delta });
+      }
+    });
+  };
+
   return (
     <section className={className}>
       <button
         id={buttonId}
+        ref={(node) => {
+          buttonRef.current = node;
+        }}
         className={summaryClassName}
         type="button"
         aria-expanded={open}
         aria-controls={regionId}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => toggle(!open)}
       >
         {title}
       </button>
