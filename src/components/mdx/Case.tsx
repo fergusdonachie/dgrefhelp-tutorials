@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef } from "react";
+
 type StepProps = {
   title: string;
   open?: boolean;
@@ -25,9 +29,27 @@ type CaseProps = {
 };
 
 export function Case({ title, open = false, children }: CaseProps) {
+  const summaryRef = useRef<HTMLElement | null>(null);
+
   return (
-    <details className="case" open={open}>
-      <summary className="case__summary">
+    <details
+      className="case"
+      open={open}
+      onToggle={(e) => {
+        const el = e.currentTarget;
+        // When collapsing, scroll the summary back into view so the page doesn't
+        // appear to "jump" upward to an arbitrary position.
+        if (!el.open) {
+          summaryRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        }
+      }}
+    >
+      <summary
+        className="case__summary"
+        ref={(node) => {
+          summaryRef.current = node;
+        }}
+      >
         <strong>{title}</strong>
       </summary>
       <div className="case__body">{children}</div>
