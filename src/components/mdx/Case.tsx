@@ -34,6 +34,29 @@ export function Case({ title, open = false, children }: CaseProps) {
   const summaryRef = useRef<HTMLElement | null>(null);
   const didHydrateRef = useRef(false);
 
+  function closeWithoutJump() {
+    const summary = summaryRef.current;
+    if (!summary) {
+      setIsOpen(false);
+      return;
+    }
+
+    // Keep the summary visually anchored in the viewport after collapse by
+    // compensating for the layout height change.
+    const beforeTop = summary.getBoundingClientRect().top;
+    const beforeScrollY = window.scrollY;
+
+    setIsOpen(false);
+
+    requestAnimationFrame(() => {
+      const afterTop = summary.getBoundingClientRect().top;
+      const delta = afterTop - beforeTop;
+      if (Math.abs(delta) > 1) {
+        window.scrollTo({ top: beforeScrollY + delta });
+      }
+    });
+  }
+
   return (
     <details
       className="case"
@@ -52,11 +75,14 @@ export function Case({ title, open = false, children }: CaseProps) {
           return;
         }
 
-        setIsOpen(el.open);
-
-        if (!el.open) {
-          summaryRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+        // If the user opened via native toggle, just reflect state.
+        if (el.open) {
+          setIsOpen(true);
+          return;
         }
+
+        // If the user closed via native toggle (e.g. keyboard), do our anchored close.
+        closeWithoutJump();
       }}
     >
       <summary
@@ -65,12 +91,10 @@ export function Case({ title, open = false, children }: CaseProps) {
           summaryRef.current = node;
         }}
         onClick={(e) => {
-          // If this click would close the case, prevent default so we can
-          // scroll to the title first, then close.
+          // Intercept mouse/touch close to avoid scroll jump.
           if (isOpen) {
             e.preventDefault();
-            summaryRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-            requestAnimationFrame(() => setIsOpen(false));
+            closeWithoutJump();
           }
         }}
       >

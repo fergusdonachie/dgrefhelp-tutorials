@@ -15,9 +15,13 @@ html,
 body {
   padding: 0;
   margin: 0;
-  background: radial-gradient(1200px 800px at 10% -10%, rgba(84, 123, 255, 0.25), transparent),
-    radial-gradient(900px 700px at 100% 0%, rgba(127, 255, 219, 0.12), transparent),
-    var(--bg);
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 800px at 10% -10%, rgba(84, 123, 255, 0.25), transparent),
+    radial-gradient(900px 700px at 100% 0%, rgba(127, 255, 219, 0.12), transparent);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
@@ -201,6 +205,7 @@ a:hover {
 .case__summary {
   cursor: pointer;
   list-style: none;
+  scroll-margin-top: 16px;
 }
 
 .case__summary::-webkit-details-marker {
