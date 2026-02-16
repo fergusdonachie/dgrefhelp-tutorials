@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 type AccordionProps = {
   title: React.ReactNode;
   defaultOpen?: boolean;
-  /**
-   * When closing, keep the header visually anchored by compensating scroll.
-   * Helps avoid the "page jumps" feeling when collapsing large content.
-   */
   anchorOnClose?: boolean;
   className?: string;
   summaryClassName?: string;
@@ -26,85 +22,98 @@ export function Accordion({
   children,
 }: AccordionProps) {
   const id = useId();
-  const regionId = useMemo(() => `acc-region-${id}`, [id]);
-  const buttonId = useMemo(() => `acc-button-${id}`, [id]);
+  const regionId = `acc-region-${id}`;
+  const buttonId = `acc-button-${id}`;
 
-  const [open, setOpen] = useState(defaultOpen);
-  const [heightPx, setHeightPx] = useState<number>(0);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const bodyInnerRef = useRef<HTMLDivElement | null>(null);
+  // We use a ref to track the previous open state to detect toggles
+  const prevOpenRef = useRef(defaultOpen);
 
-  // Measure content height.
-  const measure = () => {
-    const el = bodyInnerRef.current;
-    if (!el) return;
-    setHeightPx(el.scrollHeight);
-  };
+  useEffect(() => {
+    if (prevOpenRef.current === isOpen) return;
+    prevOpenRef.current = isOpen;
 
-  // Keep height in sync with dynamic content changes (e.g. nested accordions opening).
-  useLayoutEffect(() => {
-    measure();
-
-    const el = bodyInnerRef.current;
+    const el = contentRef.current;
+    const btn = buttonRef.current;
     if (!el) return;
 
-    const ro = new ResizeObserver(() => {
-      measure();
-    });
-    ro.observe(el);
+    setIsAnimating(true);
+
+    // If closing, we might want to anchor scroll
+    let startY = 0;
+    let startTop = 0;
+    const shouldAnchor = anchorOnClose && !isOpen && btn;
+
+    if (shouldAnchor && btn) {
+      startY = window.scrollY;
+      startTop = btn.getBoundingClientRect().top;
+    }
+
+    // Animation logic
+    if (isOpen) {
+      // OPENING: 0 -> height
+      // 1. Set height to 0 (should already be there, but ensure it)
+      el.style.height = "0px";
+      // 2. Force reflow
+      void el.offsetHeight;
+      // 3. Set to scrollHeight
+      el.style.height = `${el.scrollHeight}px`;
+    } else {
+      // CLOSING: height -> 0
+      // 1. Set height to current scrollHeight (explicitly) to start transition
+      el.style.height = `${el.scrollHeight}px`;
+      // 2. Force reflow
+      void el.offsetHeight;
+      // 3. Set to 0
+      el.style.height = "0px";
+    }
+
+    const onTransitionEnd = () => {
+      setIsAnimating(false);
+      if (isOpen) {
+        // Remove height limit so content can grow/shrink freely (fixes "cut off" bug)
+        el.style.height = "auto";
+      }
+      el.removeEventListener("transitionend", onTransitionEnd);
+    };
+
+    el.addEventListener("transitionend", onTransitionEnd);
+
+    // Scroll correction for closing
+    if (shouldAnchor && btn) {
+      // We check immediately after the layout change (start of animation)
+      requestAnimationFrame(() => {
+        const currentTop = btn.getBoundingClientRect().top;
+        const delta = currentTop - startTop;
+        // If the header moved significantly, scroll to put it back
+        if (Math.abs(delta) > 1) {
+          window.scrollTo({
+            top: startY + delta,
+            behavior: "instant", // Instant correction, don't smooth scroll the correction
+          });
+        }
+      });
+    }
 
     return () => {
-      ro.disconnect();
+      el.removeEventListener("transitionend", onTransitionEnd);
     };
-  }, [children]);
-
-  // Measure on window resize.
-  useEffect(() => {
-    const onResize = () => measure();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  const toggle = (next: boolean) => {
-    if (!anchorOnClose || next) {
-      setOpen(next);
-      return;
-    }
-
-    // Anchor the button position in the viewport while collapsing.
-    const btn = buttonRef.current;
-    if (!btn) {
-      setOpen(false);
-      return;
-    }
-
-    const beforeTop = btn.getBoundingClientRect().top;
-    const beforeScrollY = window.scrollY;
-
-    setOpen(false);
-
-    requestAnimationFrame(() => {
-      const afterTop = btn.getBoundingClientRect().top;
-      const delta = afterTop - beforeTop;
-      if (Math.abs(delta) > 1) {
-        window.scrollTo({ top: beforeScrollY + delta });
-      }
-    });
-  };
+  }, [isOpen, anchorOnClose]);
 
   return (
     <section className={className}>
       <button
+        ref={buttonRef}
         id={buttonId}
-        ref={(node) => {
-          buttonRef.current = node;
-        }}
         className={summaryClassName}
         type="button"
-        aria-expanded={open}
+        aria-expanded={isOpen}
         aria-controls={regionId}
-        onClick={() => toggle(!open)}
+        onClick={() => setIsOpen((prev) => !prev)}
       >
         {title}
       </button>
@@ -114,13 +123,20 @@ export function Accordion({
         role="region"
         aria-labelledby={buttonId}
         className={bodyClassName}
+        ref={contentRef}
         style={{
-          maxHeight: open ? `${heightPx}px` : "0px",
+          // If open and not animating, height is auto (from effect)
+          // If closed and not animating, height is 0
+          // If animating, the effect handles inline styles
+          height: isOpen && !isAnimating ? "auto" : undefined,
           overflow: "hidden",
-          transition: "max-height 220ms ease",
+          transition: "height 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+          // Initial state for SSR (if defaultOpen=false)
+          ...(!isOpen && !isAnimating ? { height: "0px" } : {}),
         }}
       >
-        <div ref={bodyInnerRef}>{children}</div>
+        {/* We don't need the inner div ref for measurement anymore, logic is on the container */}
+        <div>{children}</div>
       </div>
     </section>
   );
